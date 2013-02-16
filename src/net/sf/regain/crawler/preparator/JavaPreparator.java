@@ -29,6 +29,7 @@ package net.sf.regain.crawler.preparator;
 
 import net.sf.regain.crawler.preparator.java.*;
 import java.util.ArrayList;
+import java.util.List;
 import net.sf.regain.RegainException;
 import net.sf.regain.crawler.document.AbstractPreparator;
 import net.sf.regain.crawler.document.RawDocument;
@@ -220,7 +221,7 @@ public class JavaPreparator extends AbstractPreparator {
 
     StringBuffer strBuffer = new StringBuffer();
 
-    ArrayList comments = parser.getComments();
+    List comments = parser.getComments();
     if (comments == null) {
       return strBuffer;
     }
