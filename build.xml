@@ -1,0 +1,1373 @@
+<?xml version="1.0"?>
+<!--
+ | regain - A file search engine providing plenty of formats
+ | Copyright (C) 2004  Til Schneider
+ | 
+ | This library is free software; you can redistribute it and/or
+ | modify it under the terms of the GNU Lesser General Public
+ | License as published by the Free Software Foundation; either
+ | version 2.1 of the License, or (at your option) any later version.
+ | 
+ | This library is distributed in the hope that it will be useful,
+ | but WITHOUT ANY WARRANTY; without even the implied warranty of
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ | Lesser General Public License for more details.
+ | 
+ | You should have received a copy of the GNU Lesser General Public
+ | License along with this library; if not, write to the Free Software
+ | Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ | 
+ | Contact: Til Schneider, info@murfman.de
+ |
+ | CVS information:
+ |  $RCSfile$
+ |   $Source$
+ |     $Date: 2012-12-06 22:28:56 +0100 (Do, 06. Dez 2012) $
+ |   $Author: thtesche $
+ | $Revision: 629 $
+ |
+ | Author: Til Schneider, www.murfman.de
+ | How to use this file: http://regain.murfman.de/wiki/doku.php?id=project_info:howto_regain_in_an_ide#ant
+ +-->
+<project name="regain" default="targets" basedir=".">
+
+  <!--
+   | The properties and paths
+   +-->
+  <property file="build.properties"/>
+  <property environment="env"/>
+  <!-- set if java.dir not set in build.properties -->
+  <property name="java.dir" value="${env.JAVA_HOME}" />
+  <condition property="java_dir_empty">
+  	<or>
+  		<length string="${java.dir}" length="0" />
+  		<equals arg1="${java.dir}" arg2="$${env.JAVA_HOME}" />
+  		<not>
+  		  <isset property="java.dir" />
+  		</not>
+  	</or>
+  </condition>
+  <tstamp>
+    <format property="timestamp" pattern="yyMMdd-HHmm"/>
+  </tstamp>
+  <!--condition property="version" value="${version.prefix}-preview-${timestamp}"-->
+  <condition property="version" value="${version.prefix}-PREVIEW">
+    <istrue value="${is-preview}"/>
+  </condition>
+  <condition property="version" value="${version.prefix}-STABLE">
+    <isfalse value="${is-preview}"/>
+  </condition>
+  <condition property="do_skip_integration_tests" value="true">
+  	<istrue value="${skip_integration_tests}"/>
+  </condition>
+  <property name="version.file" value="${version}"/>
+  <property name="programname" value="Regain"/>
+  <property name="programname.file" value="regain"/>
+  <property name="doc.header" value="${programname} ${version} API"/>
+  <property name="doc.title" value="API documentation for ${programname} ${version}"/>
+  <property name="doc.bottom" value="${programname} ${version}, Copyright (C) 2004-2010 Til Schneider, www.murfman.de, Thomas Tesche, www.clustersystems.info"/>
+  <property name="jacobgen-src.dir" value="build/jacobgen/generated-src"/>
+  <property name="jacobgen-classes.dir" value="build/jacobgen/classes"/>
+  <property name="jacobgen-packed.dir" value="jacobgen/packed"/>
+  <property name="package-lists.dir" value="txt/package-lists"/>
+  <property name="launch4j.dir" location="launch4j" />
+
+  <!-- Autodetect the platform -->
+  <condition property="platform" value="linux">
+    <os family="unix"/>
+  </condition>
+  <condition property="platform" value="win">
+    <os family="windows"/>
+  </condition>
+  <path id="sourcepath">
+    <pathelement location="src"/>
+  </path>
+  <path id="classpath">
+    <pathelement location="build/classes"/>
+    <fileset dir="lib">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="lib/${platform}">
+      <include name="*.jar"/>
+    </fileset>
+    <fileset dir="lib/win">
+      <include name="jacob*.jar"/>
+    </fileset>
+  </path>
+  <path id="testlibs-classpath">
+  	<fileset dir="test/lib">
+  	  <include name="*.jar"/>
+  	</fileset>
+  </path>
+  <path id="jacobgen-classpath">
+    <pathelement location="build/classes"/>
+    <fileset dir="lib">
+      <include name="jacob.jar"/>
+    </fileset>
+  </path>
+  <path id="docpath">
+    <path refid="sourcepath"/>
+  </path>
+
+
+
+  <!--
+   | Display all public targets
+   +-->
+  <target name="targets">
+    <echo message="usage: build [target]"/>
+    <echo message=""/>
+    <echo message="available targets:"/>
+    <echo message="  targets               Shows this list of targets."/>
+    <echo message="  dump-info             Dumps some information (VM-Version...)."/>
+    <echo message="  clean                 Deletes the classes directory."/>
+    <echo message="  clean-runtime         Deletes the runtime directory."/>
+    <echo message="  clean-all             Deletes all generated directories."/>
+    <echo message="                        (Without public and the deployed stuff)"/>
+    <echo message="  clean-web             Deletes the deployed stuff (Without the config)."/>
+    <echo message="  prepare               Prepares the compilation. (Extracts the libs)"/>
+    <echo message="  prepare-once          Prepares the compilation if needed. (Extracts the libs)"/>
+    <echo message="  preparators           Create preperator jars."/>
+    <echo message="  plugins	           Create crawler plugin jars."/>
+    <echo message="  doc                   Generates the JavaDoc documentation."/>
+    <echo message="  make                  Compiles the source code."/>
+    <echo message="  make-test             Compiles the test source code."/>
+    <echo message="  make-test-integration Compiles the integration test source code."/>
+    <echo message="  make-jni              Generates the JNI header files."/>
+    <echo message="  make-jacobgen         Compiles the source code generated by jacobgen"/>
+    <echo message="  pack-jacobgen         Packs a zip file containing the generated jacobgen source"/>
+    <echo message="                        and a jar file containing the classes."/>
+    <echo message="  copy-msg              Copies all msg files to build/msg."/>
+    <echo message="  test                  Does the JUnit tests."/>
+    <echo message="  test-preparators      Runs the preparator test."/>
+    <echo message="  test-integration      Runs the integration tests."/>
+    <echo message="  runtime-desktop       Prepares the desktop runtime directory."/>
+    <echo message="  runtime-server        Prepares the server runtime directory."/>
+    <echo message="  runtime               Prepares the runtime directory."/>
+    <echo message="  runtime-desktop-fast  Prepares the desktop runtime directory without the main jars."/>
+    <echo message="  runtime-server-fast   Prepares the server runtime directory without the main jars."/>
+    <echo message="  runtime-fast          Prepares the runtime directory without the main jars."/>
+    <echo message="  run-crawler           Runs the crawler."/>
+    <echo message="  run-crawler-fast      Runs the crawler without building the jars."/>
+    <echo message="  run-desktop-fast      Runs the desktop without building the jars."/>
+    <echo message="  jsmoothgen            Creates a windows executable using Jsmooth."/>
+    <echo message="  installer             Creates a Windows installer for the project."/>
+    <echo message="  public                Creates all the stuff that can be downloaded."/>
+    <echo message="  public-no-installer   Creates all the stuff that can be downloaded except for the installer."/>
+    <echo message="  deploy-war            Deploys the war file at the servlet engine."/>
+    <echo message="  deploy-web            Deploys only the web content at the servlet engine."/>
+    <echo message="  deploy-classes        Deploys only the compiled classes at the servlet engine."/>
+    <echo message="  deploy-config         Deploys only the config at the servlet engine."/>
+    <echo message="  all                   Creates all (Same as public)."/>
+  </target>
+
+
+  <!--
+   | Dump some information.
+   +-->
+  <target name="dump-info">
+    <echo message="java.dir=${java.dir}" />
+    <echo message="JAVA_HOME=${env.JAVA_HOME}" />
+    <echo message="java.vm.info=${java.vm.info}" />
+    <echo message="java.vm.name=${java.vm.name}" />
+    <echo message="java.vm.vendor=${java.vm.vendor}" />
+    <echo message="java.vm.version=${java.vm.version}" />
+    <echo message="os.arch=${os.arch}" />
+    <echo message="os.name=${os.name}" />
+    <echo message="os.version=${os.version}" />
+    <echo message="file.encoding=${file.encoding}" />
+    <echo message="user.language=${user.language}" />
+  </target>
+
+
+  <!--
+   | Deletes the classes directory.
+   +-->
+  <target name="clean">
+    <delete dir="build/classes"/>
+  </target>
+
+
+  <!--
+   | Deletes the runtime directory
+   +-->
+  <target name="clean-runtime">
+    <delete dir="build/runtime"/>
+    <delete dir="build/preparator"/>
+    <delete dir="build/plugins"/>
+    <delete dir="build/web-temps"/>
+    <delete dir="test/build/runtime"/>
+    <delete dir="log"/>
+  </target>
+
+
+  <!--
+   | Deletes all generated directories (Without public and the deployed stuff).
+   +-->
+  <target name="clean-all" depends="clean, clean-runtime">
+    <delete dir="build/included-lib-classes"/>
+    <delete dir="build/doc"/>
+  </target>
+
+
+  <!--
+   | Deletes the deployed stuff (Without the config).
+   +-->
+  <target name="clean-web">
+    <echo message="Deleting the deployed stuff from ${deploy-target.dir}"/>
+    <delete dir="${deploy-target.dir}/${programname.file}"/>
+    <delete file="${deploy-target.dir}/${programname.file}.war"/>
+  </target>
+
+
+  <!--
+   | Prepares the compilation. (Extracts the libs)
+   +-->
+  <target name="prepare">
+    <echo message="Extracting the lib jars ..." />
+    <delete dir="build/included-lib-classes"/>
+    <mkdir dir="build/included-lib-classes/common"/>
+    <unjar dest="build/included-lib-classes/common">
+      <fileset dir="lib">
+        <include name="*.jar"/>
+      </fileset>
+    </unjar>
+    <unjar dest="build/included-lib-classes/win">
+      <fileset dir="lib/win">
+        <include name="*.jar"/>
+      </fileset>
+    </unjar>
+    <unjar dest="build/included-lib-classes/linux">
+      <fileset dir="lib/linux">
+        <include name="*.jar"/>
+      </fileset>
+    </unjar>
+  </target>
+
+
+  <!--
+   | Prepares the compilation. (Extracts the libs)
+   | Does nothing if the libs were already extracted.
+   +-->
+  <target name="prepare-once" depends="-check-prepare, -prepare-if-needed"/>
+  <target name="-check-prepare">
+    <condition property="included-lib-classes.missing">
+      <not>
+        <available file="build/included-lib-classes" type="dir"/>
+      </not>
+    </condition>
+  </target>
+  <target name="-prepare-if-needed" if="included-lib-classes.missing">
+    <antcall target="prepare"/>
+  </target>
+
+
+  <!--
+   | Generates the JavaDoc documentation.
+   +-->
+  <target name="doc">
+    <echo message="Generating JavaDoc documentation ..." />
+    <delete dir="build/doc"/>
+    <mkdir dir="build/doc/javadoc"/>
+    <javadoc packagenames="*"
+             sourcepathref="docpath"
+             classpathref="classpath"
+             destdir="build/doc/javadoc"
+             doctitle="${doc.title}"
+             windowtitle="${doc.title}"
+             header="${doc.header}"
+             bottom="${doc.bottom}"
+             stylesheetfile="txt/stylesheet.css"
+             access="private"
+             charset="UTF-8"
+             failonerror="true">
+             <!-- additionalparam="-breakiterator" -->
+      <link offline="true"
+            href="${java-api-location}"
+            packagelistLoc="txt/dummy-jdk-api-doc"/>
+    </javadoc>
+    <mkdir dir="build/doc/tlddoc"/>
+    <java fork="true" jar="lib/ant/tlddoc.jar"
+          failonerror="true">
+      <arg line="-d build/doc/tlddoc"/>
+      <arg value="web/server/regain-search.tld"/>
+    </java>
+  </target>
+
+
+
+  <!--
+   | Compiles the source code.
+   +-->
+  <target name="make">
+    <echo message="Compiling the source code using ${java.dir} ..." />
+    <fail if="java_dir_empty">
+  		Neither 'java.dir' nor JAVA_HOME is set, so no compiling is possible. Please copy build.properties.sample to build.properties and edit its values.
+  	</fail>
+    
+    <mkdir dir="build/classes"/>
+    <javac destdir="build/classes"
+           debug="${debug}"
+           deprecation="true"
+           executable="${java.dir}/bin/javac"
+           source="1.5"
+           target="1.5"
+           fork="true"
+           includeantruntime="false">
+      <compilerarg value="-Xlint"/>
+      <src>
+        <path refid="sourcepath"/>
+      </src>
+      <classpath>
+        <path refid="classpath"/>
+      </classpath>
+    </javac>
+    <copy todir="build/classes">
+      <fileset dir="src" includes="**/*.gif"/>
+      <fileset dir="src" includes="**/*.jpg"/>
+      <fileset dir="src" includes="**/*.dtd"/>
+      <fileset dir="src" includes="**/*.properties"/>
+    </copy>
+  </target>
+
+
+  <!--
+   | Compiles the test source code.
+   +-->
+  <target name="make-test" depends="make">
+    <echo message="Compiling the test source code ..." />
+    <fail if="java_dir_empty">
+  		Neither 'java.dir' nor JAVA_HOME is set, so no compiling is possible. Please copy build.properties.sample to build.properties and edit its values.
+  	</fail>
+  	
+  	<mkdir dir="build/classes"/>
+    <javac destdir="build/classes"
+           debug="${debug}"
+           deprecation="true"
+           target="1.5"
+           includeantruntime="false">
+      <src path="test/src"/>
+      <exclude name="net/sf/regain/test/integration/**"/>
+      <classpath>
+        <path refid="classpath"/>
+        <fileset dir="lib/ant">
+          <include name="junit.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+
+  <!--
+   | Compiles the integration test source code.
+   +-->
+  <target name="make-test-integration" unless="do_skip_integration_tests"> <!-- depends="runtime" -->
+  
+    <echo message="Compiling the integration test source code ..." />
+    <fail if="java_dir_empty">
+  		Neither 'java.dir' nor JAVA_HOME is set, so no compiling is possible. Please copy build.properties.sample to build.properties and edit its values.
+  	</fail>
+  	
+  	<mkdir dir="build/classes"/>
+    <javac destdir="build/classes"
+           debug="${debug}"
+           deprecation="true"
+           target="1.5"
+           includeantruntime="false">
+      <src>
+        <pathelement location="test/src/net/sf/regain/test/integration"/>
+      </src>
+      <classpath>
+        <path refid="classpath"/>
+        <path refid="testlibs-classpath"/>
+        <fileset dir="lib/ant">
+          <include name="junit.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+
+  <!--
+   | Generates the JNI header files.
+   +-->
+  <target name="make-jni" depends="make">
+    <javah outputFile="src-cpp/ifilter_wrapper/ifilter_wrapper.h" classpath="build/classes"
+           class="net.sf.regain.crawler.preparator.ifilter.IfilterWrapper"/>
+  </target>
+
+
+  <!--
+   | Creates the preparator jars.
+   +-->
+  <target name="preparators" depends="make, prepare-once">
+    <mkdir dir="build/preparator"/>
+    <jar jarfile="build/preparator/PoiMsOfficePreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".PoiMsOfficePreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="font_metrics.properties"/>
+        <include name="org/apache/poi/**"/>
+        <include name="org/apache/commons/logging/**"/>
+        <include name="org/dom4j/**"/>
+        <include name="javax/xml/namespace/**"/>
+        <include name="javax/xml/stream/**"/>
+        <include name="org/openxmlformats/**"/>
+        <include name="schemaorg_apache_xmlbeans/**"/>
+        <include name="schemasMicrosoftComOfficeExcel/**"/>
+        <include name="schemasMicrosoftComOfficeOffice/**"/>
+        <include name="schemasMicrosoftComOfficePowerpoint/**"/>
+        <include name="schemasMicrosoftComOfficeWord/**"/>
+        <include name="schemasMicrosoftComVml/**"/>
+        <include name="repackage/**"/>
+        <include name="org/apache/xmlbeans/**"/>
+        <include name="org/w3c/dom/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/PoiMsOfficePreparator*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/JacobMsOfficePreparators.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".JacobMsExcelPreparator;.JacobMsWordPreparator;.JacobMsPowerPointPreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/win">
+        <include name="com/jacob/**"/>
+        <include name="de/filiadata/lucene/spider/generated/msoffice2000/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/AbstractJacobMsOfficePreparator.*"/>
+        <include name="net/sf/regain/crawler/preparator/JacobMs*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/HtmlPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".HtmlPreparator"/>
+      </manifest>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/HtmlPreparator.*"/>
+        <include name="net/sf/regain/crawler/preparator/html/**"/>
+      </fileset>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="font_metrics.properties"/>
+        <include name="org/htmlparser/**"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/MessagePreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".MessagePreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="javax/mail/**"/>
+        <include name="javax/activation/**"/>
+        <include name="com/sun/mail/**"/>
+        <include name="com/sun/activation/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/MessagePreparator.*"/>
+        <include name="net/sf/regain/crawler/preparator/util/StripEntities.*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/SimpleRtfPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".SimpleRtfPreparator"/>
+      </manifest>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/SimpleRtfPreparator.*"/>
+        <include name="net/sf/regain/crawler/preparator/rtf/**"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/PdfBoxPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".PdfBoxPreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="org/apache/commons/logging/**"/>
+        <include name="org/apache/pdfbox/**"/>
+        <include name="org/apache/jempbox/**"/>
+        <include name="org/apache/fontbox/**"/>
+        <include name="org/apache/tools/**"/>
+        <include name="org/bouncycastle/**"/>
+        <include name="com/ibm/icu/**"/>
+        <include name="Resources/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/PdfBoxPreparator.*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/MP3Preparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".MP3Preparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="org/jaudiotagger/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/MP3Preparator.*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/GenericAudioPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".GenericAudioPreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="org/jaudiotagger/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/GenericAudioPreparator.*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/JavaPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".JavaPreparator"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="org/eclipse/**"/>
+        <include name="org/osgi/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/java/**"/>
+        <include name="net/sf/regain/crawler/preparator/JavaPreparator.*"/>
+      </fileset>
+    </jar>
+    <jar jarfile="build/preparator/IfilterPreparator.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".IfilterPreparator"/>
+      </manifest>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/IfilterPreparator.*"/>
+        <include name="net/sf/regain/crawler/preparator/ifilter/**"/>
+      </fileset>
+    </jar>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="OpenOfficePreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="PlainTextPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="SwingRtfPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="XmlPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="EmptyPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="FilenamePreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="JarPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="ZipPreparator"/>
+    </antcall>
+    <antcall target="-simple-preparator">
+      <param name="classname" value="ExternalPreparator"/>
+    </antcall>
+  </target>
+
+
+
+  <!--
+   | Helper target for preparators.
+   |
+   | Creates a simple preparator jar. A simple preparator is a preparator
+   | having one class and no libs.
+   +-->
+  <target name="-simple-preparator" if="classname">
+    <jar jarfile="build/preparator/${classname}.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Preparator-Classes" value=".${classname}"/>
+      </manifest>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/preparator/${classname}.*"/>
+      </fileset>
+    </jar>
+  </target>
+
+
+  <!--
+   | Creates the crawler plugin jars.
+   +-->
+   <target name="plugins" depends="make, prepare-once">
+    <mkdir dir="build/plugins"/>
+    <antcall target="-simple-plugin">
+    	<param name="classname" value="FilesizeFilterPlugin" />
+    </antcall>
+  </target>
+
+
+  <!--
+   | Helper target for plugins.
+   |
+   | Create a simple crawler plugin jar. (1 class, no libs.)
+   +-->
+  <target name="-simple-plugin" if="classname">
+    <jar jarfile="build/plugins/${classname}.jar"
+         compress="false" index="true">
+      <manifest>
+        <attribute name="Plugin-Class" value=".${classname}"/>
+      </manifest>
+      <fileset dir="build/classes">
+        <include name="net/sf/regain/crawler/plugin/plugin/${classname}.*"/>
+      </fileset>
+    </jar>  
+  </target>
+
+  <!--
+   | Creates the desktop runtime directory for fast running (without jars).
+   +-->
+  <target name="runtime-desktop-fast" depends="preparators, plugins">
+    <copy todir="build/runtime/desktop/win">
+      <fileset dir="lib/win" includes="jacob.dll"/>
+      <fileset dir="lib/win" includes="ifilter_wrapper.dll"/>
+      <fileset dir="lib/win" includes="tray.dll"/>
+    </copy>
+<!--    <copy todir="build/runtime/desktop/linux">
+      <fileset dir="lib/linux" includes="libtray.so"/>
+      <fileset dir="lib/linux" includes="libjdic.so"/>
+    </copy>-->
+    <copy todir="build/runtime/desktop/win/conf/default">
+      <fileset dir="txt" includes="*Configuration*.xml"/>
+      <fileset dir="txt" includes="log4j.properties"/>
+      <fileset dir="txt" includes="authentication.properties"/>
+    </copy>
+    <copy todir="build/runtime/desktop/linux/conf/default">
+      <fileset dir="build/runtime/desktop/win/conf/default"/>
+    </copy>
+    <mkdir dir="build/runtime/desktop/win/plugins" />
+    <mkdir dir="build/runtime/desktop/linux/plugins" />
+
+    <copy todir="build/runtime/desktop/win/web">
+      <fileset dir="web/common">
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+      <fileset dir="web/desktop">
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+    </copy>
+    <antcall target="-merge-messages">
+      <param name="path-1" value="web/common"/>
+      <param name="path-2" value="web/desktop"/>
+      <param name="target" value="build/runtime/desktop/win/web"/>
+    </antcall>
+    <echo message="${version}" file="build/runtime/desktop/win/web/version"/>
+    <copy todir="build/runtime/desktop/linux/web">
+      <fileset dir="build/runtime/desktop/win/web"/>
+    </copy>
+        
+    <!-- Copy the preparator jars -->
+    <copy todir="build/runtime/crawler/preparator">
+      <fileset dir="build/preparator">
+        <!--exclude name="JavaPreparator.jar"/-->
+      </fileset>
+    </copy>
+    <copy todir="build/runtime/desktop/win/preparator">
+      <fileset dir="build/preparator">
+        <!--exclude name="JavaPreparator.jar"/-->
+      </fileset>
+    </copy>
+    <copy todir="build/runtime/desktop/linux/preparator">
+      <fileset dir="build/preparator">
+        <exclude name="JacobMsOfficePreparators.jar"/>
+        <exclude name="IfilterPreparator.jar"/>
+        <!--exclude name="JavaPreparator.jar"/-->
+      </fileset>
+    </copy>
+    <copy todir="build/runtime/desktop/win/plugins">
+      <fileset dir="build/plugins">
+      </fileset>
+    </copy>
+    <copy todir="build/runtime/desktop/linux/plugins">
+      <fileset dir="build/plugins">
+      </fileset>
+    </copy>
+  </target>
+
+
+  <!--
+   | Merges the message files (msg*.properties) of two directories.
+   +-->
+  <target name="-merge-messages" if="target">
+    <loadfile property="msg-1" srcFile="${path-1}/msg.properties"/>
+    <loadfile property="msg-2" srcFile="${path-2}/msg.properties"/>
+    <echo file="${target}/msg.properties" message="${msg-1}${msg-2}"/>
+    <loadfile property="msg_de-1" srcFile="${path-1}/msg_de.properties"/>
+    <loadfile property="msg_de-2" srcFile="${path-2}/msg_de.properties"/>
+    <echo file="${target}/msg_de.properties" message="${msg_de-1}${msg_de-2}"/>
+    <loadfile property="msg_it-1" srcFile="${path-1}/msg_it.properties"/>
+    <loadfile property="msg_it-2" srcFile="${path-2}/msg_it.properties"/>
+    <echo file="${target}/msg_it.properties" message="${msg_it-1}${msg_it-2}"/>
+  </target>
+
+
+  <!--
+   | Creates the server runtime directory for fast running (without jars).
+   +-->
+  <target name="runtime-server-fast" depends="preparators, plugins">
+    <echo message="Creating the server runtime ..." />
+    <mkdir dir="build/runtime/crawler/log"/>
+    <mkdir dir="build/runtime/crawler/plugins" />
+    <copy todir="build/runtime/crawler">
+      <fileset dir="lib/win" includes="jacob.dll"/>
+      <fileset dir="lib/win" includes="ifilter_wrapper.dll"/>
+      <fileset dir="txt" includes="CrawlerConfiguration*.xml"/>
+      <fileset dir="txt" includes="log4j.properties"/>
+      <fileset dir="txt" includes="authentication.properties"/>
+    </copy>
+    <mkdir dir="build/runtime/search/conf/regain"/>
+    
+    <copy todir="build/runtime/search/conf/regain">
+      <fileset dir="txt" includes="SearchConfiguration.xml"/>
+    </copy>
+
+    <!-- Copy the preparator jars -->
+    <copy todir="build/runtime/crawler/preparator">
+      <fileset dir="build/preparator"/>
+    </copy>
+    <copy todir="build/runtime/crawler/plugins">
+      <fileset dir="build/plugins"/>
+    </copy>
+  </target>
+
+
+  <!--
+   | Creates the runtime directory for fast running (without jars).
+   +-->
+  <target name="runtime-fast" depends="runtime-desktop-fast, runtime-server-fast"/>
+
+
+  <!--
+   | Creates the desktop runtime directory.
+   +-->
+  <target name="runtime-desktop" depends="prepare-once, runtime-desktop-fast">
+    <echo message="Creating the jars ..." />
+    <fileset id="desktop-common-jars" dir="build/included-lib-classes/common">
+      <include name="org/apache/lucene/**"/>
+      <include name="org/tartarus/**"/>
+      <include name="org/apache/log4j/**"/>
+      <include name="org/apache/regexp/**"/>
+      <include name="org/apache/commons/**"/>
+    
+      <!-- aperture -->
+      <include name="org/semanticdesktop/aperture/**"/>
+      <include name="org/ontoware/rdf2go/**"/>
+      <include name="org/slf4j/**"/>
+      <include name="org/openrdf/model/impl/**"/>
+
+      <!-- CIFS, Samba -->
+      <include name="jcifs/**"/>
+
+      <!-- XML stuff -->
+      <include name="javax/xml/**"/>
+      <include name="org/w3c/dom/**"/>
+      <include name="org/apache/xerces/**"/>
+      <include name="org/xml/sax/**"/>
+
+      <!-- Mail classes -->
+      <include name="javax/mail/**"/>
+      <include name="javax/activation/**"/>
+      <include name="com/sun/mail/**"/>
+      <include name="com/sun/activation/**"/>
+      
+      <!-- desktop specific stuff -->
+      <include name="simple/**"/>
+<!--      <include name="org/jdesktop/jdic/init/**"/>
+      <include name="org/jdesktop/jdic/tray/**"/>
+      <include name="org/jdesktop/jdic/browser/internal/WebBrowserUtil.*"/>-->
+    </fileset>
+    <fileset id="desktop-common-classes" dir="build/classes">
+      <exclude name="net/sf/regain/crawler/preparator/**"/>
+      <exclude name="net/sf/regain/ui/server/**"/>
+      <exclude name="net/sf/regain/util/sharedtag/taglib/**"/>
+    </fileset>
+    <jar jarfile="build/runtime/desktop/win/${programname.file}.jar"
+         compress="false"
+         index="true">
+      <manifest>
+        <attribute name="Main-Class" value="net.sf.regain.ui.desktop.Main"/>
+      </manifest>
+      <fileset refid="desktop-common-jars"/>
+      <fileset refid="desktop-common-classes"/>
+<!--      <fileset dir="build/included-lib-classes/win">
+        <include name="org/jdesktop/jdic/init/**"/>
+        <include name="org/jdesktop/jdic/tray/**"/>
+        <include name="org/jdesktop/jdic/browser/**"/>
+      </fileset>-->
+    </jar>
+    <jar jarfile="build/runtime/desktop/linux/${programname.file}.jar"
+         compress="false"
+         index="true">
+      <manifest>
+        <attribute name="Main-Class" value="net.sf.regain.ui.desktop.Main"/>
+      </manifest>
+      <fileset refid="desktop-common-jars"/>
+      <fileset refid="desktop-common-classes"/>
+<!--      <fileset dir="build/included-lib-classes/linux">
+        <include name="org/jdesktop/jdic/init/**"/>
+        <include name="org/jdesktop/jdic/tray/**"/>
+        <include name="org/jdesktop/jdic/browser/**"/>
+      </fileset>-->
+    </jar>
+  </target>
+
+
+  <!--
+   | Creates files that are included in the regain.war.
+   +-->
+  <target name="-web-temps">
+    <mkdir dir="build/web-temps"/>
+    <antcall target="-merge-messages">
+      <param name="path-1" value="web/common"/>
+      <param name="path-2" value="web/server"/>
+      <param name="target" value="build/web-temps"/>
+    </antcall>
+    <echo message="${version}" file="build/web-temps/version"/>
+    <mkdir dir="build/web-temps/taglib"/>
+    <copy todir="build/web-temps/taglib">
+      <fileset dir="web/taglib">
+        <include name="*.tld"/>
+      </fileset>
+    </copy>
+  </target>
+
+
+  <!--
+   | Creates the server runtime directory.
+   +-->
+  <target name="runtime-server" depends="prepare-once, runtime-server-fast, -web-temps">
+    <jar jarfile="build/runtime/crawler/${programname.file}-crawler.jar"
+         compress="false"
+         index="true">
+      <manifest>
+        <attribute name="Main-Class" value="net.sf.regain.crawler.Main"/>
+      </manifest>
+      <fileset dir="build/included-lib-classes/common">
+        <include name="org/apache/lucene/**"/>
+        <include name="org/tartarus/**"/>
+        <include name="org/apache/log4j/**"/>
+        <include name="org/apache/regexp/**"/>
+        <include name="org/apache/commons/**"/>
+        
+        <!-- aperture -->
+        <include name="org/semanticdesktop/aperture/**"/>
+        <include name="org/ontoware/rdf2go/**"/>
+        <include name="org/slf4j/**"/>
+        <include name="org/openrdf/model/impl/**"/>
+
+        <!-- CIFS, Samba -->
+        <include name="jcifs/**"/>
+
+        <!-- XML stuff -->
+        <include name="javax/xml/**"/>
+        <include name="org/w3c/dom/**"/>
+        <include name="org/apache/xerces/**"/>
+        <include name="org/xml/sax/**"/>
+        
+        <!-- Mail classes -->
+        <include name="javax/mail/**"/>
+        <include name="javax/activation/**"/>
+        <include name="com/sun/mail/**"/>
+        <include name="com/sun/activation/**"/>
+      </fileset>
+      <fileset dir="build/classes">
+        <exclude name="net/sf/regain/crawler/preparator/**"/>
+        <exclude name="net/sf/regain/search/**"/>
+        <exclude name="net/sf/regain/ui/**"/>
+        <exclude name="net/sf/regain/util/sharedtag/**"/>
+        <exclude name="net/sf/regain/util/ui/**"/>
+      </fileset>
+    </jar>
+    <mkdir dir="build/runtime/search/webapps"/>
+    <war destfile="build/runtime/search/webapps/${programname.file}.war"
+         webxml="web/server/web-inf/web.xml">
+      <classes dir="build/classes">
+        <exclude name="net/sf/regain/crawler/**"/>
+        <exclude name="net/sf/regain/ui/desktop/**"/>
+        <exclude name="net/sf/regain/util/sharedtag/simple/**"/>
+        <exclude name="net/sf/regain/util/ui/**"/>
+      </classes>
+      <lib dir="lib">
+        <include name="lucene-*.jar"/>
+        <include name="jakarta-regexp-*.jar"/>
+        <include name="log4j-*.jar"/>
+        <include name="commons-collections*.jar"/>
+        <include name="../web/taglib/*.jar"/>
+      </lib>
+      <fileset dir="web/common">
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+      <fileset dir="web/server">
+        <exclude name="web-inf"/>
+        <exclude name="web-inf/**"/>
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+      <fileset dir="build/web-temps"/>
+    </war>
+  </target>
+
+
+  <!--
+   | Creates the runtime directory.
+   +-->
+  <target name="runtime" depends="runtime-desktop, runtime-server">
+  </target>
+
+
+  <!--
+   | Creates a windows executable using Jsmooth
+   +-->
+  <taskdef name="jsmoothgen"
+     classname="net.charabia.jsmoothgen.ant.JSmoothGen" 
+     classpath="jsmooth/lib/jsmoothgen-ant.jar"/> 
+
+
+  <!--
+   | Creates a windows executable using Jsmooth
+   +-->
+  <target name="jsmoothgen" depends="clean-all, runtime">
+    <echo message="Creating the exe file ..." />
+    <jsmoothgen project="jsmooth/exe-creation.jsmooth" skeletonroot="jsmooth/skeletons"/>
+  </target>
+
+  <!--
+   | Creates a windows executable using Launch4j
+   +-->
+  <taskdef name="launch4j"
+    classname="net.sf.launch4j.ant.Launch4jTask"
+    classpath="${launch4j.dir}/launch4j.jar
+        :${launch4j.dir}/lib/xstream.jar" />
+
+  <target name="launch4j" >
+    <echo message="Creating the exe file with launch4j ..." />
+    <launch4j configFile="launch4j/skeletons/regain_exe.xml"
+      outfile="build/runtime/desktop/win/regain.exe"
+      jar="build/runtime/desktop/win/regain.jar"
+      fileVersion="${version.prefix}.0"
+      productVersion="${version.prefix}.0" />
+
+  </target>
+
+  <!--
+   | Creates a Windows installer for the project.
+   +-->
+  <target name="installer" depends="launch4j">
+  <!--target name="installer" depends="jsmoothgen"-->
+    <mkdir dir="build/public"/>
+    <exec executable="${installer.executable}"
+          failonerror="true">
+      <arg value="/NOCD"/>
+      <arg value="/DVERSION=${version}"/>
+      <arg value="/DVERSION_FILE=${version.file}"/>
+      <arg value="/DPROG_NAME=${programname}"/>
+      <arg value="/DPROG_NAME_FILE=${programname.file}"/>
+      <arg value="/DRUNTIME_DIR=build\runtime\desktop"/>
+      <arg value="/DINSTALLER_DIR=installer"/>
+      <arg value="/DPUBLIC_DIR=build\public"/>
+      <arg value="/DLANGUAGE_FILE=installer\German.nlf"/>
+      <arg value="/DBASICS_DIR=installer\Basics"/>
+      <arg value="installer\regain.nsi"/>
+    </exec>
+  </target>
+
+
+  <!--
+   | Runs the preparator test.
+   +-->
+  <target name="test-preparators" depends="make-test, runtime-server-fast">
+    <delete dir="build/test/docs"/>
+    <mkdir dir="build/test/docs"/>
+    <echo message="Testing Docs from ${test-preparator-docs}..." />
+    
+    <java classname="net.sf.regain.test.PreparatorTest"
+          dir="build/runtime/crawler"
+          failonerror="true"
+          fork="true">
+      <arg value="${test-preparator-docs}"/>
+      <arg value="../../test/docs"/>
+      <classpath>
+        <fileset dir="build/preparator">
+          <include name="*.jar"/>
+        </fileset>
+        <fileset dir="lib">
+          <include name="lucene-*.jar"/>
+          <include name="jakarta-regexp-*.jar"/>
+          <include name="log4j-*.jar"/>
+        </fileset>
+        <pathelement path="build/classes"/>
+      </classpath>
+    </java>
+  </target>
+
+
+  <!--
+   | Does the JUnit tests.
+   |
+   | If this target does not work, copy the file "junit.jar" from the directory
+   | "lib/ant" in your ANT_HOME/lib directory.
+   | (ANT_HOME/lib is on my machine "/usr/share/ant/lib")
+   +-->
+  <target name="test" depends="make-test">
+    <junit haltonfailure="true" fork="true" showoutput="true" >
+      <classpath>
+        <path refid="classpath"/>
+        <!-- <path refid="testlibs-classpath"/> -->
+        <fileset dir="lib">
+          <include name="*.jar"/>
+          <include name="ant/*.jar"/>
+        </fileset>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
+      <batchtest>
+        <fileset dir="test/src">
+          <include name="**/*Test.java"/>
+          <exclude name="net/sf/regain/test/PreparatorTest.java"/>
+          <exclude name="net/sf/regain/test/integration/**"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <!--
+   | Does the JUnit integration tests.
+   |
+   | If this target does not work, copy the file "junit.jar" from the directory
+   | "lib/ant" in your ANT_HOME/lib directory.
+   | (ANT_HOME/lib is on my machine "/usr/share/ant/lib")
+   +-->
+  <target name="test-integration" depends="make-test-integration" unless="do_skip_integration_tests">
+    <echo message="Running integration tests ..." />
+    <echo message="(You can skip these tests by setting the property 'skip_integration_tests' to true, e.g. ant -Dskip_integration_tests=true public)" />
+    <junit haltonerror="true" haltonfailure="true" fork="true"> <!-- showoutput="true" -->
+      <classpath>
+        <path refid="classpath"/>
+        <path refid="testlibs-classpath"/>
+        <fileset dir="lib">
+          <include name="*.jar"/>
+          <include name="ant/*.jar"/>
+        </fileset>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
+      <batchtest>
+        <fileset dir="test/src">
+          <include name="net/sf/regain/test/integration/**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <!--
+   | Runs the project.
+   +-->
+  <target name="run-crawler" depends="runtime">
+    <java jar="build/runtime/crawler/${programname.file}-crawler.jar"
+          dir="build/runtime/crawler"
+          fork="true">
+          <!--
+          jvm="${java.dir}/bin/java"
+          -->
+    </java>
+  </target>
+
+
+  <!--
+   | Runs the project.
+   +-->
+  <target name="run-crawler-fast" depends="runtime-fast">
+    <java classname="net.sf.regain.crawler.Main"
+          dir="build/runtime/crawler"
+          fork="true">
+          <!--
+          jvm="${java.dir}/bin/java"
+          -->
+      <jvmarg value="-Xmx256M"/>
+      <classpath>
+        <path refid="classpath"/>
+      </classpath>
+    </java>
+  </target>
+
+
+  <!--
+   | Runs the project.
+   +-->
+  <target name="run-desktop-fast" depends="runtime-fast">
+    <java classname="net.sf.regain.ui.desktop.Main"
+          dir="build/runtime/desktop/${platform}"
+          fork="true">
+          <!--
+          jvm="${java.dir}/bin/java"
+          -->
+      <!--jvmarg value="-Djava.library.path=."/-->
+      <!-- Install the lib for your systems e.g. apt-get install libjdic-bin -->
+      <jvmarg value="-Djava.library.path=/usr/lib/jni"/>
+      <jvmarg value="-Xmx256M"/>
+      <classpath>
+        <path refid="classpath"/>
+      </classpath>
+    </java>
+  </target>
+
+  <!--
+   | Runs the project.
+   +-->
+  <target name="run-desktop-fast-notrayicon" depends="runtime-fast">
+    <java classname="net.sf.regain.ui.desktop.Main"
+          dir="build/runtime/desktop/${platform}"
+          fork="true">
+          <!--
+          jvm="${java.dir}/bin/java"
+          -->
+      <!-- Usefull for some Linux distris where the desktop integration don't work.. -->
+      <arg value="-noTrayIcon"/>
+      <jvmarg value="-Djava.library.path=."/>
+      <jvmarg value="-Xmx256M"/>
+      <classpath>
+        <path refid="classpath"/>
+        <fileset dir="build/runtime/desktop/${platform}/conf">
+          <include name="*.properties"/>
+        </fileset>
+      </classpath>
+    </java>
+  </target>
+  
+  <!--
+   | Creates all the stuff that can be downloaded.
+   +-->
+  <target name="public" depends="public-no-installer, installer"/>
+  
+
+  <!--
+   | Creates all the stuff that can be downloaded except for the installer.
+   |
+   | This target depends on clean-runtime to be sure that the runtime
+   | directory contains no stuff we don't want to be destributed.
+   +-->
+  <target name="public-no-installer" depends="clean-all, runtime, test-integration, doc">
+    <mkdir dir="build/public"/>
+    <zip destfile="build/public/${programname.file}_v${version}_server.zip">
+      <zipfileset prefix="${programname.file}/runtime/crawler"
+                  dir="build/runtime/crawler"/>
+      <zipfileset prefix="${programname.file}/runtime/search"
+                  dir="build/runtime/search"/>
+      <zipfileset prefix="${programname.file}"
+                  dir="txt">
+        <include name="license.txt"/>
+        <include name="WhatIsNew.txt"/>
+        <include name="WasIstNeu.txt"/>
+      </zipfileset>
+    </zip>
+    <zip destfile="build/public/${programname.file}_v${version}_desktop_win.zip">
+      <zipfileset prefix="${programname.file}/"
+                  dir="build/runtime/desktop/win"/>
+      <zipfileset prefix="${programname.file}"
+                  dir="txt">
+        <include name="license.txt"/>
+        <include name="WhatIsNew.txt"/>
+        <include name="WasIstNeu.txt"/>
+      </zipfileset>
+    </zip>
+    <zip destfile="build/public/${programname.file}_v${version}_desktop_linux.zip">
+      <zipfileset prefix="${programname.file}/"
+                  dir="build/runtime/desktop/linux"/>
+      <zipfileset prefix="${programname.file}"
+                  dir="txt">
+        <include name="license.txt"/>
+        <include name="WhatIsNew.txt"/>
+        <include name="WasIstNeu.txt"/>
+        <include name="regain.sh"/>
+      </zipfileset>
+    </zip>
+    <zip destfile="build/public/${programname.file}_v${version}_doc.zip">
+      <zipfileset prefix="${programname.file}/doc"
+                  dir="build/doc"/>
+    </zip>
+    <zip destfile="build/public/${programname.file}_v${version}_src.zip">
+      <zipfileset prefix="${programname.file}"
+                  dir="">
+        <!-- Exclude Eclipse Files -->
+        <exclude name=".*"/>
+        <exclude name=".settings/**"/>
+        <exclude name="bin/**"/>
+
+	<!-- Exclude Integration Test Files -->
+        <exclude name="log/**"/>
+        <exclude name="test/build/**"/>
+
+	<!-- Exclude any temporary files -->
+        <exclude name="**/*.bak"/>
+        <exclude name="**/*~"/>
+
+        <exclude name="build.properties"/>
+        <exclude name="build/**"/>
+        <exclude name="test/docs/**"/>
+        <exclude name="jacobgen/generated-src/**"/>
+        <exclude name="jacobgen/*.olb"/>
+        <exclude name="src/**/.*"/>
+        <exclude name="txt/*.pdf"/>
+      </zipfileset>
+      <zipfileset prefix="${programname.file}"
+                  dir="txt"
+                  includes="license.txt"/>
+    </zip>
+  </target>
+
+
+  <!--
+   | Deploys the war file at the servlet engine.
+   +-->
+  <target name="deploy-war" depends="runtime-server, clean-web">
+    <echo message="Deploying the war file at ${deploy-target.dir}...." />
+    <copy todir="${deploy-target.dir}">
+      <fileset dir="build/runtime/search/webapps" includes="${programname.file}.war"/>
+    </copy>
+  </target>
+
+
+  <!--
+   | Deploys the web content at the servlet engine.
+   +-->
+  <target name="deploy-web" depends="-web-temps">
+    <!--
+     | NOTE: We create the WEB-INF directory too, to ensure that it is written
+     |       in uppercase. Otherwise tomcat will complain.
+     +-->
+    <mkdir dir="${deploy-target.dir}/${programname.file}/WEB-INF"/>
+    <echo message="Deploying the web content at ${deploy-target.dir}/${programname.file}" />
+    <copy todir="${deploy-target.dir}/${programname.file}/WEB-INF"
+          file="web/server/web-inf/web.xml"/>
+    <copy todir="${deploy-target.dir}/${programname.file}">
+      <fileset dir="web/common">
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+      <fileset dir="web/server">
+        <exclude name="web-inf"/>
+        <exclude name="web-inf/**"/>
+        <exclude name="msg*.properties"/>
+        <exclude name="**/CVS/*"/>
+      </fileset>
+      <fileset dir="build/web-temps"/>
+    </copy>
+    <copy todir="${deploy-target.dir}/${programname.file}/WEB-INF/lib">
+      <fileset dir="web/taglib">
+        <include name="*.jar"/>
+      </fileset>
+    </copy>
+    <echo message="${version}" file="${deploy-target.dir}/${programname.file}/version"/>
+  </target>
+
+
+  <!--
+   | Deploys the classes and libs at the servlet engine.
+   +-->
+  <target name="deploy-classes" depends="make">
+    <mkdir dir="${deploy-target.dir}/${programname.file}/WEB-INF/classes"/>
+    <copy todir="${deploy-target.dir}/${programname.file}/WEB-INF/classes">
+      <fileset dir="build/classes">
+        <exclude name="net/sf/regain/crawler/**"/>
+        <exclude name="net/sf/regain/ui/desktop/**"/>
+        <exclude name="net/sf/regain/util/sharedtag/simple/**"/>
+        <exclude name="net/sf/regain/util/ui/**"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${deploy-target.dir}/${programname.file}/WEB-INF/lib"/>
+    <copy todir="${deploy-target.dir}/${programname.file}/WEB-INF/lib">
+      <fileset dir="lib">
+        <include name="lucene-*.jar"/>
+        <include name="jakarta-regexp-*.jar"/>
+        <include name="commons-collections*.jar"/>
+        <include name="log4j-*.jar"/>
+      </fileset>
+    </copy>
+  </target>
+
+  
+  <!--
+   | Deploys the config at the servlet engine.
+   +-->
+  <target name="deploy-config">
+    <mkdir dir="${deploy-target.dir}/../conf/regain"/>
+    <copy todir="${deploy-target.dir}/../conf/regain">
+      <fileset dir="txt">
+        <include name="SearchConfiguration.xml"/>
+      </fileset>
+    </copy>
+  </target>
+  
+
+  <!--
+   | Creates all.
+   +-->
+  <target name="all" depends="public">
+  </target>
+
+
+
+  <!--
+   | Compiles the source code generated by jacobgen.
+   +-->
+  <target name="make-jacobgen">
+    <echo message="Compiling the generated source code ..." />
+    <mkdir dir="${jacobgen-classes.dir}"/>
+    <javac srcdir="${jacobgen-src.dir}"
+           destdir="${jacobgen-classes.dir}"
+           target="1.2"
+           debug="${debug}"
+           deprecation="true">
+      <classpath>
+        <path refid="jacobgen-classpath"/>
+      </classpath>
+    </javac>
+  </target>
+
+
+
+  <!--
+   | Packs a zip file containing the generated jacobgen source
+   | and a jar file containing the classes.
+   +-->
+  <target name="pack-jacobgen" depends="make-jacobgen">
+    <echo message="Packing the jars ..." />
+    <mkdir dir="${jacobgen-packed.dir}"/>
+    <zip destfile="${jacobgen-packed.dir}/jacobgen-msoffice2000_src.zip">
+      <zipfileset prefix="${programname.file}/jacobgen/generated-src"
+                  dir="${jacobgen-src.dir}">
+      </zipfileset>
+    </zip>
+    <jar jarfile="${jacobgen-packed.dir}/jacobgen-msoffice2000.jar"
+         index="true"
+         basedir="${jacobgen-classes.dir}"/>
+  </target>
+
+  
+  <!--
+   | Copies all msg files to build/msg and flattens the file structure.
+   +-->
+  <target name="copy-msg">
+    <mkdir dir="build/msg"/>
+    <copy todir="build/msg">
+      <fileset dir=".">
+        <include name="src/**/msg*.properties"/>
+        <include name="web/**/msg*.properties"/>
+      </fileset>
+      <mapper type="package" from="*.properties" to="*.properties"/>
+    </copy>
+  </target>
+</project>

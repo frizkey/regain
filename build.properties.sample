@@ -1,0 +1,30 @@
+# To use this file, rename it to "build.properties"
+
+# The current Version
+version.prefix=1.8.1
+
+# Is the version a preview version (an inofficial realease)
+is-preview=true
+
+# Should be compiled with the debug flag?
+debug=true
+
+# The location of the Java API
+java-api-location=http://java.sun.com/javase/6/docs/api/
+
+# The location of the Java Standard Edition 6 
+#java.dir=/usr/local/lib/jdk1.6
+java.dir=C:/Programme/Java/jdk1.6.0_12
+
+# The directory where the tomcat server is located
+deploy-target.dir=C:/Programme/jakarta-tomcat-6.0/webapps
+
+# The location of the installer creator program
+installer.executable=C:\\.....fill_in_the_correct_path.....\\regain\\installer\\makensis.exe
+
+# Skip Integration Tests
+skip_integration_tests=true
+
+# Files for preparator test, relative to build/runtime/crawler
+#test-preparator-docs=../../../test/docs
+test-preparator-docs=../../../test/testfiles

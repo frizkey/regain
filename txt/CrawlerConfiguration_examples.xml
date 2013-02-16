@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE configuration [
+  <!ENTITY amp "&#x26;">
+  <!ENTITY lt "&#x3C;">
+  <!ENTITY minus "&#45;">
+]>
+<!-- SYSTEM "CrawlerConfiguration.dtd"  - but wait, if you do this, Java will throw an error if xml is invalid! -->
+<!--
+ | This file shows the possibilities of the regain configuration.
+ |
+ | The real crawler configuration is done CrawlerConfiguration.xml. This file
+ | holds only examples.
+ |
+ | You can find a detailed description of all configuration tags here:
+ | http://regain.murfman.de/wiki/doku.php?id=config:crawlerconfiguration.xml
+ +-->
+<configuration>
+
+<!-- Proxy settings -->
+<proxy>
+  <!--
+  <host>proxy</host>
+  <port>3128</port>
+  <user>HansWurst</user>
+  <password>gkxy23</password>
+  -->
+</proxy>
+
+
+<!--
+ | The user agent the crawler should use for identifying at the HTTP server(s).
+ +-->
+<userAgent>Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)</userAgent>
+
+
+<!-- The list of URLs where the spidering will start. -->
+<startlist>
+  <!-- Directory parsing -->
+  <!--
+  <start parse="true" index="false">file://c:/Eigene Dateien</start>
+  -->
+
+  <!-- HTML parsing -->
+  <!--
+  <start parse="true" index="true">http://www.mydomain.de/some/path/</start>
+  -->
+  <!-- Encapsulate & from query with <![CDATA[]]> -->
+  <!--
+  <start parse="true" index="true"><![CDATA[http://www.mydomain.de/some/path/print.do?id=1&pretty=no]]></start>
+  -->
+</startlist>
+
+
+<!-- The whitelist containing prefixes an URL must have to be processed -->
+<whitelist>
+  <prefix name="file">file://</prefix>
+  <prefix>http://www.mydomain.de</prefix>
+</whitelist>
+
+
+<!-- The blacklist containing prefixes an URL must NOT have to be processed -->
+<blacklist>
+  <!--
+  <prefix>http://www.mydomain.de/some/dynamic/content/</prefix>
+  exclude backup directory -->
+  <!--
+  <regex>.*/backup/[^/]*</regex>
+  -->
+  <!-- Exclude .svn
+  <regex>.*/\.svn/.*</regex>
+  -->
+  <!-- Include only documents with the enlisted endings. So this is in reality
+       a whitelist :). Thanks to ikkysleepy-->
+  <!--
+       <regex>file:\/\/\/.*\.(?!(csv|doc|docx|dot|htm|html|mht|msg|pdf|pot|ppt|pptx|rtf|shtml|txt|xla|xls|xlsm|xlsx|xlt|xml|eml|odp|ods|odt|sdw))(.|..|...|....)</regex>
+  -->
+</blacklist>
+
+<!-- URLCleaner: remove parts of the url. This is mostly used for remove a session id. -->
+ <UrlCleaner>
+   <regex>PHPSESSID=[0-9a-z]{5,}</regex>
+ </UrlCleaner>
+
+<!-- The preferences for the search index -->
+<searchIndex>
+  <!-- The directory where the index should be located -->
+  <dir>searchindex</dir>
+
+  <!-- Specifies, whether the index should be built -->
+  <buildIndex>true</buildIndex>
+
+ <!--
+   | Specifies the analyzer type to use.
+   |
+   | You may specify the class name of the analyzer or you use one of the
+   | following aliases:
+   |  * english: For the english language
+   |    (alias for org.apache.lucene.analysis.en.EnglishAnalyzer)
+   |  * german or deutsch: For the german language
+   |    (alias for org.apache.lucene.analysis.de.GermanAnalyzer)
+   |  * french or francais: For the french language
+   |    (alias for org.apache.lucene.analysis.fr.FrenchAnalyzer)
+   |  * italian or italiano: For the italian language
+   |    (alias for org.apache.lucene.analysis.it.ItalianAnalyzer)
+   |
+   | Get more information at:
+   | http://lucene.apache.org/java/3_1_0/api/contrib-analyzers/index.html?overview-summary.html
+   +-->
+  <analyzerType>german</analyzerType>
+
+  <!--
+   | Sets the maximum number of terms that will be indexed for a single field in
+   | a document.
+   |
+   | If missing or set to -1, then lucene's default will be used (10000).
+   +-->
+  <maxFieldLength>10000</maxFieldLength>
+
+  <!--
+   | Specifies the interval between two breakpoints in minutes. If set to 0, no
+   | breakpoints will be created.
+   |
+   | A breakpoint is a snapshot the crawler creates periodically while working.
+   | If the crawler should crash it goes on from the last breakpoint.
+   +-->
+  <breakpointInterval>10</breakpointInterval>
+
+  <!--
+   | Specifies, whether the analysis files should be written.
+   | The analysis files help to check the quality of the index building process.
+   +-->
+  <writeAnalysisFiles>false</writeAnalysisFiles>
+
+  <!--
+   | Gibt den maximalen Prozentsatz von gescheiterten Dokumenten an. (0..100)
+   |
+   | Ist das Verhältnis von gescheiterten Dokumenten zur Gesamtzahl von Dokumenten
+   | größer als dieser Prozentsatz, so wird der Index verworfen.
+   |
+   | Gescheiterte Dokumente sind Dokumente die es entweder nicht gibt (Deadlink)
+   | oder die nicht ausgelesen werden konnten.
+   +-->
+  <maxFailedDocuments>100</maxFailedDocuments>
+
+  <!--
+   | Contains all words that should not be indexed.
+   | Separate the words by a blank.
+   +-->
+  <stopwordList>
+    einer eine eines einem einen der die das dass daß du er sie es was wer wie
+    wir und oder ohne mit am im in aus auf ist sein war wird ihr ihre ihres als
+    für von mit dich dir mich mir mein sein kein durch wegen wird
+  </stopwordList>
+  <!-- German long: from https://github.com/jdf/cue.language/
+  <stopwordList>
+	aber alle allem allen aller alles als also am an ander andere anderem anderen
+	anderer anderes anderm andern anders auch auf aus bei bin bis bist da damit dann
+	das dass daß dasselbe dazu dein deine deinem deinen deiner deines dem demselben
+	den denn denselben der derer derselbe derselben des desselben dessen dich die
+	dies diese dieselbe dieselben diesem diesen dieser dieses dir doch dort du durch
+	ein eine einem einen einer eines einige einigem einigen einiger einiges einmal
+	er es etwas euch euer eure eurem euren eurer eures für gegen gewesen hab habe
+	haben hat hatte hatten hier hin hinter ich ihm ihm ihn ihnen ihr ihre ihrem
+	ihren ihrer ihres im in indem ins ist jede jedem jeden jeder jedes jene jenem
+	jenen jener jenes jetzt kann kein keine keinem keinen keiner keines können
+	könnte machen man manche manchem manchen mancher manches mein meine meinem
+	meinen meiner meines mich mir mit muss musste nach nicht nichts noch nun nur ob
+	oder ohne sehr sein seine seinem seinen seiner seines selbst sich sie sind so
+	solche solchem solchen solcher solches soll sollte sondern sonst über um und uns
+	unser unsere unserem unseren unseres unter viel vom von vor während war waren
+	warst was weg weil weiter welche welchem welchen welcher welches wenn werde
+	werden wie wieder will wir wird wirst wo wollen wollte würde würden zu zum zur
+	zwar zwischen
+  </stopwordList>
+  -->
+  <!-- English short
+  <stopwordList>
+   a able about across after all almost also am among an and any are as at be
+   because been but by can cannot could dear did do does either else ever every
+   for from get got had has have he her hers him his how however i if in into is
+   it its just least let like likely may me might most must my neither no nor
+   not of off often on only or other our own rather said say says she should
+   since so some than that the their them then there these they this tis to too
+   twas us wants was we were what when where which while who whom why will with
+   would yet you your
+  </stopwordList>
+  -->
+   <!-- English long
+  <stopwordList>
+    a about an are as at be by com de en for from how in is it la of on or
+    that the this to was what when where who will with und the www a about above
+    accordingly after again against ah all also although always am an and
+    any anymore anyone are as at away b be been begin beginning beginnings begins
+    begone begun being below between but by c ca can cannot come could d did do
+    doing during each either else end et etc even ever far ff following for fro
+    from further get go goes going got had has have he her hers herself him
+    himself his how i if in into is it its itself last lastly less ll many may
+    me might more must my myself nay near nearly never new next no not now o of
+    off often oh on only or other otherwise our ourselves out over perhaps put
+    puts quite s said saw say see seen shall she should since so some such t
+    than that the their them themselves then there therefore these they this
+    those thou though throughout thus to too toward unless until up upon us ve
+    very was we were what whatever when where which while who whom whomever
+    whose why with within without would yes your yours yourself yourselves
+    a b c d e f g h i j k l m n o p q r s t u v w x y z the an about above
+    across afterwards after again against ago almost along already always among
+    anywhere around as at away back before behind beside between beyond by down
+    downstairs during else enough every everywhere far for from here in inside
+    into just last lot lots many middle much near next never not now nowhere of
+    off often on once over outside over quite rather recently rarely round
+    seldom sometimes somewhere there through till today to tomorrow tonight too
+    towards until up upstairs usually under very while with within without yes
+    yesterday yet you he she it we they me him her it us them myself yourself
+    himself herself itself ourselves yourselves themselves oneself my your its
+    our their mine yours hers ours theirs this these those some any no none
+    other another every all others each whole both neither none someone somebody
+    something anyone anybody anything nobody nothing everyone everybody
+    everything and or but because if as like such how who why what where
+    whose when whom which bye hello be was been am is are were can could come
+    came comes do did done does get got gets have had has having may might must
+    shall should ought take took taken takes taking use uses used will would
+    cannot can could did does one two three four five six seven eight nine ten
+    nought zero first second third fourth fifth sixth seventh eighth ninth tenth
+    ii iii iv vi vii viii ix sunday monday tuesday wednesday thursday friday
+    saturday january february march april may june july august september october
+    november december date false e.g eg i.e ie etc example examples jr miss
+    thing things true year bad big close difficult easy empty full good little
+    long ready open short tall
+  </stopwordList>
+  -->
+  <!-- italian:
+  <stopwordList>
+    di a da in con su per tra fra io tu egli ella essa noi voi essi loro che cui
+    se e né anche inoltre neanche o ovvero oppure ma però eppure anzi invece
+    bensì tuttavia quindi dunque perciò pertanto cioè infatti ossia non come
+    mentre perché quando mio mia miei mie tuo tua tuoi tue suo sua suoi sue
+    nostro nostre nostri nostre vostro vostre vostri vostre il lo la i gli le un
+    uno una degli delle alcuno alcuna alcune qualcuno qualcuna nessuno nessuna
+    molto molte molti molte poco parecchio assai
+  </stopwordList>
+  </stopwordList> -->
+  <!-- french:
+  <stopwordList>
+    alors au aucuns aussi autre avant avec avoir bon car ce cela ces ceux chaque ci comme comment
+    dans des du dedans dehors depuis deux devrait doit donc dos droite début elle elles en encore essai est et eu
+    fait faites fois font force haut hors ici il ils je juste la le les leur là ma maintenant mais mes mine moins
+    mon mot même ni nommés notre nous nouveaux ou où par parce parole pas personnes peut peu pièce plupart
+    pour pourquoi quand que quel quelle quelles quels qui sa sans ses seulement si sien son sont sous soyez sujet
+    sur ta tandis tellement tels tes ton tous tout trop très tu valeur voie voient vont votre vous vu ça étaient
+    état étions été être
+  </stopwordList>
+  -->
+
+  <!--
+   | Contains all words that should not be changed by an analyser when indexed.
+   | Separate the words by a blank.
+   +-->
+  <exclusionList></exclusionList>
+
+  <!--
+   | The names of the fields of which to prefetch the destinct values.
+   | Separate the field names by a blank.
+   |
+   | Put in the names of the fields you use a search:input_fieldlist tag for.
+   | The values shown in the list will then be extracted by the crawler and not
+   | by the search mask, which prevents a slow first loading of a page for huge
+   | indexes.
+   +-->
+  <valuePrefetchFields>mimetype</valuePrefetchFields>
+
+  <!--
+   | Specifies wether the whole content should be stored in the index for the
+   | purpose of a content preview
+   +-->
+  <storeContentForPreview>true</storeContentForPreview>
+  
+</searchIndex>
+
+
+<!--
+ | The preparators in the order they should be applied. Preparators that aren't listed
+ | here will be applied after the listed ones.
+ |
+ | You can use this list...
+ |   ... to define the priority (= order) of the preparators
+ |   ... to disable preparators
+ |   ... to configure preparators
+ +-->
+<preparatorList>
+  <preparator>
+    <class>.HtmlPreparator</class>
+    <!--
+     | The regular expression a URL must match to, to be prepared by this
+     | preparator. If specified the regular expression used internally by the
+     | preparator is overridden.
+     +-->
+    <!--
+    <urlPattern>(^http://[^/]*/?$)|(^http://.*/[^\.]*$)|(^http://.*/$)|(\.(html|htm|jsp|php\d?|asp)$)</urlPattern>
+    -->
+    <config>
+      <!--
+       | The regular expressions that find the start and end locations of the content
+       | that should be indexed in HTML pages.
+       |
+       | "prefix":        The prefix the content extractor is responsible for.
+       |                  You may specify more content extractors.
+       | "startRegex":    The regular expression that finds the start of the
+       |                  content. When the content should be indexed from the
+       |                  start, specify an empty text for "startRegex".
+       | "endRegex":      The regular expression that finds the end of the
+       |                  content. When the content should be indexed to the
+       |                  end, specify an empty text for "endRegex".
+       | "headlineRegex": The regular expression that finds the headline.
+       | "headlineRegex.group": The group of "headlineRegex" that extracts the
+       |                  headline.
+       +-->
+      <!--
+      <section name="contentExtractor">
+        <param name="prefix">http://www.testit.de/</param>
+        <param name="startRegex">&lt;!&minus;&minus; Start content &minus;&minus;&gt;</param>
+        <param name="endRegex"></param>
+        <param name="headlineRegex">&lt;a name=.*&gt;(.*)&lt;/a&gt;</param>
+        <param name="headlineRegex.group">1</param>
+      </section>
+      -->
+
+      <!--
+       | The extractor that extracts the navigation path in HTML pages.
+       |
+       | "prefix":        The prefix the path extractor is responsible for.
+       | "startRegex":    The regular expression that finds the start of the area
+       |                  where the whole navigation path is.
+       | "endRegex":      The regular expression that finds the end of the area where
+       |                  the whole navigation path is.
+       | "pathNodeRegex": The regular expression that extracts one node of the
+       |                  navigation path.
+       | "pathNodeRegex.urlGroup": The group of "pathNodeRegex" that extracts
+       |                  the URL of the path node.
+       | "pathNodeRegex.titleGroup": The group of "pathNodeRegex" that extracts
+       |                  the title of the path node.
+       +-->
+      <!--
+      <section name="pathExtractor">
+        <param name="prefix">http://www.testit.de/</param>
+        <param name="startRegex">&lt;!&minus;&minus; Pfad-Beginn &minus;&minus;&gt;</param>
+        <param name="endRegex">&lt;!&minus;&minus; Pfad-Ende &minus;&minus;&gt;</param>
+        <param name="pathNodeRegex">&lt;a.*href="([^"]*)">(.*)&lt;/a></param>
+        <param name="pathNodeRegex.urlGroup">1</param>
+        <param name="pathNodeRegex.titleGroup">2</param>
+      </section>
+      -->
+    </config>
+  </preparator>
+
+  <preparator>
+    <class>.PoiMsOfficePreparator</class>
+  </preparator>
+
+  <preparator enabled="false">
+    <class>.JacobMsExcelPreparator</class>
+    <config>
+      <!--
+       | properties:
+       |   The semicolon separated list of document properties that should be
+       |   extracted.
+       |   Possible properties are:
+       |     propTitle, subject, author, keywords, comments, template,
+       |     lastAuthor, revision, timeLastPrinted, timeCreated, timeLastSaved,
+       |     totalEditTime, pages, words, characters, security, category,
+       |     manager, company, bytes, lines, paras, hyperlinkBase, charsWSpaces
+       +-->
+      <section name="main">
+        <param name="properties">author</param>
+      </section>
+    </config>
+  </preparator>
+  
+  <preparator enabled="false">
+    <class>.JacobMsWordPreparator</class>
+    <config>
+      <!--
+       | headlineStyles:
+       |   The semicolon separated list of Word style names (format templates)
+       |   used by headline paragraphs.
+       |
+       | properties:
+       |   The semicolon separated list of document properties that should be
+       |   extracted.
+       |   Possible properties are:
+       |     propTitle, subject, author, keywords, comments, template,
+       |     lastAuthor, revision, timeLastPrinted, timeCreated, timeLastSaved,
+       |     totalEditTime, pages, words, characters, security, category,
+       |     manager, company, bytes, lines, paras, hyperlinkBase, charsWSpaces
+       +-->
+      <section name="main">
+        <param name="headlineStyles">Überschrift 1;Überschrift 2</param>
+        <param name="properties">author</param>
+      </section>
+    </config>
+  </preparator>
+  
+  <preparator enabled="false">
+    <class>.JacobMsPowerPointPreparator</class>
+    <config>
+      -->
+      <!--
+       | properties:
+       |   The semicolon separated list of document properties that should be
+       |   extracted.
+       |   Possible properties are:
+       |     propTitle, subject, author, keywords, comments, template,
+       |     lastAuthor, revision, timeLastPrinted, timeCreated, timeLastSaved,
+       |     totalEditTime, pages, words, characters, security, category,
+       |     manager, company, bytes, lines, paras, slides, notes, hiddenSlides,
+       |     mmClips, hyperlinkBase, charsWSpaces
+       +-->
+      <section name="main">
+        <param name="properties">author</param>
+      </section>
+    </config>    
+  </preparator>
+  
+  <preparator enabled="false">
+      <class>.IfilterPreparator</class>
+  </preparator>
+
+  <!--
+   | Add the extensions of those files to the urlPattern of this preparator for
+   | which there are no preparators for extracting the content. regain will then
+   | add at least the file names and paths to the index.
+   +-->
+  <preparator>
+    <urlPattern>\.(mp3|wav)$</urlPattern>
+    <class>.EmptyPreparator</class>
+  </preparator>
+ 
+  <!-- CatchAll-preparator -->
+  <preparator priority="-10">
+    <class>.EmptyPreparator</class>
+    <urlPattern>.*</urlPattern>
+  </preparator>
+
+  <preparator priority="-10">
+    <class>.FilenamePreparator</class>
+    <urlPattern>.*</urlPattern>
+  </preparator>
+
+  <preparator>
+    <class>.SimpleRtfPreparator</class>
+  </preparator>
+  <preparator>
+    <class>.SwingRtfPreparator</class>
+  </preparator>
+
+  <preparator enabled="false">
+    <class>.ExternalPreparator</class>
+    <config>
+      <!--
+       | You may specify multiple commands by specifying multiple command
+       | sections.
+       |
+       | urlPattern:
+       |   The pattern that matches URLs that should be prepared with this
+       |   command.
+       |
+       | commandLine:
+       |   The command line to use for executing the external command.
+       |   Before the command is executed ${filename} will be replaced by the
+       |   file name.
+       |
+       | checkExitCode:
+       |   Specifies whether the exit code should be checked. Optional. Default
+       |   is true.
+       +-->
+      <section name="command">
+        <param name="urlPattern">\.ps$</param>
+        <param name="commandLine">ps2ascii ${filename}</param>
+        <param name="checkExitCode">false</param>
+      </section>
+    </config>
+  </preparator>
+</preparatorList>
+
+<!--
+ | Crawler Plugins that hook into the crawling process.
+ |
+ | You can use this list...
+ |   ... to define the priority (= order) of the plugins
+ |   ... to disable plugins
+ |   ... to configure plugins
+ +-->
+  <crawlerPluginList>
+    <!-- 
+     | Create Thumbnails of the indexed documents during the thumbnailing process.
+     | These Thumbnails can be used in the search results.
+     +-->
+  	<crawlerPlugin enabled="true">
+  	  <class>de.uni_siegen.wineme.come_in.thumbnailer.plugin.ThumbnailerPlugin</class>
+  	  <config>
+  	    <section name="thumbnailing">
+  	  	  <!-- Folder where the created thumbnails should be stored.
+  	  	       If you change this folder and there already are thumbnails indexed, only new thumbnails will go there. -->
+   	      <param name="thumbnailFolder">thumbs/</param>
+  	    
+  	      <!-- Desired Image dimensions of the thumbnail. -->
+  	      <param name="imageWidth">160</param>
+  	      <param name="imageHeight">120</param>
+  	    </section>
+  	    <section name="externalHelpers">
+	  	  <!-- Where is OpenOffice installed? If not available, try to auto-detect folders --> 
+  	  	  <!-- <param name="openOfficeHome">file://c:/Programme/OpenOffice.org 3</param> -->
+  	  	  
+  	  	  <!-- Where is the profile to use? If not available, a temporary profile is created (at each crawling process start) -->
+  	  	  <!-- <param name="openOfficeProfile">plugins/ressources/ooo-template-dir</param> -->
+  	    </section>
+  	  </config>
+  	</crawlerPlugin>
+  	
+  </crawlerPluginList>
+
+<!--
+ | The index may be extended with auxiliary fields. These are fields that have
+ | been generated from the URL of an document.
+ |
+ | Example: If you have a directory with a sub directory for every project,
+ | then you may create a field with the project's name.
+ |
+ | The folling tag will create a field "project" with the value "otto23"
+ | from the URL "file://c:/projects/otto23/docs/Spez.doc":
+ |   <auxiliaryField name="project" regexGroup="1">
+ |     <regex>^file://c:/projects/([^/]*)</regex>
+ |   </auxiliaryField>
+ |
+ | URLs that doen't match will get no "project" field.
+ |
+ | Having done this you may search for "Offer project:otto23" and you will get
+ | only hits from this project directory.
+ +-->
+<auxiliaryFieldList>
+  <auxiliaryField name="extension" regexGroup="1" toLowercase="true">
+    <regex>\.([^\.]*)$</regex>
+  </auxiliaryField>
+  <auxiliaryField name="location" regexGroup="1" store="false" tokenize="true">
+    <regex>^(.*)$</regex>
+  </auxiliaryField>
+</auxiliaryFieldList>
+
+
+<!-- Specifies, whether to load URLs that are neither parsed nor indexed -->
+<loadUnparsedUrls>false</loadUnparsedUrls>
+
+
+<!--
+ | Der Timeout für HTTP-Downloads. Dieser Wert bestimmt die maximale Zeit
+ | in Sekunden, die ein HTTP-Download insgesamt dauern darf.
+ +-->
+<httpTimeout>180</httpTimeout>
+
+
+<!--
+ | The list of patterns a document's URL must match to, when the link text
+ | should be used as title instead of the document's real title.
+ +-->
+<useLinkTextAsTitleList>
+  <urlPattern>^http://.*\.(pdf|xls|doc|rtf|docx|xlsx|pptx)$</urlPattern>
+</useLinkTextAsTitleList>
+
+
+<!--
+ | Specifies which control files should be crated. These files may be used to
+ | check with a sceduling script whether the index was successfully built.
+ |
+ | <finishedWithoutFatalsFile>: The name of the control file that should be
+ | created if the index creation finished without fatal errors.
+ |
+ | <finishedWithFatalsFile>: The name of the control file that should be
+ | created if the index creation failed with a fatal error.
+ +-->
+<!--
+<controlFiles>
+  <finishedWithoutFatalsFile>c:\Temp\control\NoFatals</finishedWithoutFatalsFile>
+  <finishedWithFatalsFile>c:\Temp\control\WithFatals</finishedWithFatalsFile>
+</controlFiles>
+-->
+
+
+<!--
+ | The CrawlerAccessController to use.
+ | 
+ | This is a part of the access control system that ensures that only those
+ | documents are shown in the search results that the user is allowed to
+ | read.
+ |
+ | If you specify a CrawlerAccessController, don't forget to specify the
+ | SearchAccessController counterpart in the SearchConfiguration.xml!
+ +-->
+<!--
+<crawlerAccessController>
+  <class jar="myAccess.jar">mypackage.MyCrawlerAccessController</class>
+  <config>
+    <param name="bla">blubb</param>
+  </config>
+</crawlerAccessController>
+-->
+
+
+<!-- The regular expressions that indentify URLs in HTML. -->
+<!-- This configuration part is no longer neccessary -->
+<!--htmlParserPatternList>
+  <pattern parse="true" index="true" regexGroup="1">="([^"]*(/|htm|html|jsp|php\d?|asp))"</pattern>
+  <pattern parse="false" index="false" regexGroup="1">="([^"]*\.(js|css|jpg|gif|png))"</pattern>
+  <pattern parse="false" index="true" regexGroup="1">="([^"]*\.[^\."]{3})"</pattern>
+</htmlParserPatternList-->
+
+
+<!--
+ | Number for cycle detection in URIs. Values greater than 1 defines that an URI will be rejected
+ | if less or more parts in the path of an URI are equal. Example file:///usr/sbin/X11/X11/X11/xconfig 
+ | will be rejected with MaxCycleCount = 2 
+-->
+<MaxCycleCount>1</MaxCycleCount>
+
+
+<!--
+ | Maximum length of summary in an prepared and indexed document (default 250000).
+ | The highlighting of search terms will be created from this summary. The longer
+ | the summary, the better the highlighting but also the size of the index. After 
+ | highlighting the summary will be cut to 200 characters for downward compatibility
+ | of the hit documents.
+-->
+<MaxSummaryLength>1000000</MaxSummaryLength>
+
+</configuration>

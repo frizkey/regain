@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE configuration [
+  <!ENTITY amp "&#x26;">
+  <!ENTITY lt "&#x3C;">
+  <!ENTITY minus "&#45;">
+]>
+
+<!--
+ | Configuration for the regain crawler (for creating a search index)
+ |
+ | You can find a detailed description of all configuration tags here:
+ | http://regain.murfman.de/wiki/doku.php?id=config:crawlerconfiguration.xml
+ |
+ | You can find more configration examples in the CrawlerConfiguration_examples.xml.
+ +-->
+<configuration>
+
+<!--
+ | Enter your HTTP proxy settings here (Look at the preferences of your browser)
+ +-->
+  <proxy>
+  <!--
+  <host>proxy</host>
+  <port>3128</port>
+  <user>HansWurst</user>
+  <password>gkxy23</password>
+  -->
+  </proxy>
+
+
+<!--
+ | The list of URLs where the spidering will start.
+ |
+ | Enter the start page of your web site resp. a file system folder here.
+ |
+ | NOTE: The examples are in a comment. Thus, if you add your path in one of
+ |       them, then don't forget to uncomment them.
+ +-->
+  <startlist>
+  <!-- Directory parsing -->
+  <!--
+  <start parse="true" index="false">file://c:/Eigene Dateien</start>
+  -->
+
+  <!-- HTML parsing -->
+  <!--
+  <start parse="true" index="true">http://www.mydomain.de/some/path/</start>
+  -->
+  <!-- IMAP post box parsing -->
+  <!--
+	<start parse="true" index="true">imaps://imap.googlemail.com:993/</start>  
+  -->
+  </startlist>
+
+
+<!--
+ | The whitelist containing prefixes an URL must have to be processed
+ |
+ | Enter the domain of your web site here.
+ +-->
+  <whitelist>
+    <prefix name="file">file://</prefix>
+    <prefix>http://www.mydomain.de</prefix>
+    <prefix>imaps://imap.googlemail.com</prefix>
+  </whitelist>
+
+
+<!--
+ | The blacklist containing prefixes an URL must NOT have to be processed
+ |
+ | Enter sub directories you don't want to be indexed here.
+ +-->
+  <blacklist>
+  <!--
+  <prefix>http://www.mydomain.de/some/dynamic/content/</prefix>
+  <regex>.*/backup/[^/]*</regex>
+  <regex>.*/\.svn/.*</regex>
+  -->
+  </blacklist>
+
+
+<!--
+ | ==================================================================================
+ | That's all you have to configure! The rest of this file is advanced configuration.
+ | ==================================================================================
+ +-->
+
+<!--
+ | URLCleaner: remove parts of the url. This is mostly used for remove a
+ | session id. The URLCleaner performs a Java String.replaceAll().
+ +-->
+ <!--UrlCleaner>
+   <regex>PHPSESSID=[0-9a-z]{5,}</regex>
+ </UrlCleaner-->
+
+<!--
+ | The preferences for the search index.
+ +-->
+  <searchIndex>
+  <!-- The directory where the index should be located -->
+    <dir>searchindex</dir>
+
+  <!--
+   | Specifies the analyzer type to use.
+   |
+   | You may specify the class name of the analyzer or you use one of the
+   | following aliases:
+   |  * english: For the english language
+   |    (alias for org.apache.lucene.analysis.en.EnglishAnalyzer)
+   |  * german or deutsch: For the german language
+   |    (alias for org.apache.lucene.analysis.de.GermanAnalyzer)
+   |  * french or francais: For the french language
+   |    (alias for org.apache.lucene.analysis.fr.FrenchAnalyzer)
+   |  * italian or italiano: For the italian language
+   |    (alias for org.apache.lucene.analysis.it.ItalianAnalyzer)
+   |
+   | Get more information at:
+   | http://lucene.apache.org/java/3_1_0/api/contrib-analyzers/index.html?overview-summary.html
+   +-->
+    <analyzerType>german</analyzerType>
+
+  <!--
+   | Contains all words that should not be indexed.
+   | Separate the words by a blank.
+   +-->
+    <stopwordList>
+    einer eine eines einem einen der die das dass daß du er sie es was wer wie
+    wir und oder ohne mit am im in aus auf ist sein war wird ihr ihre ihres als
+    für von mit dich dir mich mir mein sein kein durch wegen wird
+    </stopwordList>
+  <!-- German long: from https://github.com/jdf/cue.language/ (/src/cue/lang/stop/)
+  <stopwordList>
+	aber alle allem allen aller alles als also am an ander andere anderem anderen
+	anderer anderes anderm andern anders auch auf aus bei bin bis bist da damit dann
+	das dass daß dasselbe dazu dein deine deinem deinen deiner deines dem demselben
+	den denn denselben der derer derselbe derselben des desselben dessen dich die
+	dies diese dieselbe dieselben diesem diesen dieser dieses dir doch dort du durch
+	ein eine einem einen einer eines einige einigem einigen einiger einiges einmal
+	er es etwas euch euer eure eurem euren eurer eures für gegen gewesen hab habe
+	haben hat hatte hatten hier hin hinter ich ihm ihm ihn ihnen ihr ihre ihrem
+	ihren ihrer ihres im in indem ins ist jede jedem jeden jeder jedes jene jenem
+	jenen jener jenes jetzt kann kein keine keinem keinen keiner keines können
+	könnte machen man manche manchem manchen mancher manches mein meine meinem
+	meinen meiner meines mich mir mit muss musste nach nicht nichts noch nun nur ob
+	oder ohne sehr sein seine seinem seinen seiner seines selbst sich sie sind so
+	solche solchem solchen solcher solches soll sollte sondern sonst über um und uns
+	unser unsere unserem unseren unseres unter viel vom von vor während war waren
+	warst was weg weil weiter welche welchem welchen welcher welches wenn werde
+	werden wie wieder will wir wird wirst wo wollen wollte würde würden zu zum zur
+	zwar zwischen
+  </stopwordList>
+  -->
+  <!-- English short
+  <stopwordList>
+   a able about across after all almost also am among an and any are as at be
+   because been but by can cannot could dear did do does either else ever every
+   for from get got had has have he her hers him his how however i if in into is
+   it its just least let like likely may me might most must my neither no nor
+   not of off often on only or other our own rather said say says she should
+   since so some than that the their them then there these they this tis to too
+   twas us wants was we were what when where which while who whom why will with
+   would yet you your
+  </stopwordList>
+  -->
+   <!-- English long
+  <stopwordList>
+    a about an are as at be by com de en for from how in is it la of on or
+    that the this to was what when where who will with und the www a about above
+    accordingly after again against ah all also although always am an and
+    any anymore anyone are as at away b be been begin beginning beginnings begins
+    begone begun being below between but by c ca can cannot come could d did do
+    doing during each either else end et etc even ever far ff following for fro
+    from further get go goes going got had has have he her hers herself him
+    himself his how i if in into is it its itself last lastly less ll many may
+    me might more must my myself nay near nearly never new next no not now o of
+    off often oh on only or other otherwise our ourselves out over perhaps put
+    puts quite s said saw say see seen shall she should since so some such t
+    than that the their them themselves then there therefore these they this
+    those thou though throughout thus to too toward unless until up upon us ve
+    very was we were what whatever when where which while who whom whomever
+    whose why with within without would yes your yours yourself yourselves
+    a b c d e f g h i j k l m n o p q r s t u v w x y z the an about above
+    across afterwards after again against ago almost along already always among
+    anywhere around as at away back before behind beside between beyond by down
+    downstairs during else enough every everywhere far for from here in inside
+    into just last lot lots many middle much near next never not now nowhere of
+    off often on once over outside over quite rather recently rarely round
+    seldom sometimes somewhere there through till today to tomorrow tonight too
+    towards until up upstairs usually under very while with within without yes
+    yesterday yet you he she it we they me him her it us them myself yourself
+    himself herself itself ourselves yourselves themselves oneself my your its
+    our their mine yours hers ours theirs this these those some any no none
+    other another every all others each whole both neither none someone somebody
+    something anyone anybody anything nobody nothing everyone everybody
+    everything and or but because if as like such how who why what where
+    whose when whom which bye hello be was been am is are were can could come
+    came comes do did done does get got gets have had has having may might must
+    shall should ought take took taken takes taking use uses used will would
+    cannot can could did does one two three four five six seven eight nine ten
+    nought zero first second third fourth fifth sixth seventh eighth ninth tenth
+    ii iii iv vi vii viii ix sunday monday tuesday wednesday thursday friday
+    saturday january february march april may june july august september october
+    november december date false e.g eg i.e ie etc example examples jr miss
+    thing things true year bad big close difficult easy empty full good little
+    long ready open short tall
+  </stopwordList>
+  -->
+  <!-- italian:
+  <stopwordList>
+    di a da in con su per tra fra io tu egli ella essa noi voi essi loro che cui
+    se e né anche inoltre neanche o ovvero oppure ma però eppure anzi invece
+    bensì tuttavia quindi dunque perciò pertanto cioè infatti ossia non come
+    mentre perché quando mio mia miei mie tuo tua tuoi tue suo sua suoi sue
+    nostro nostre nostri nostre vostro vostre vostri vostre il lo la i gli le un
+    uno una degli delle alcuno alcuna alcune qualcuno qualcuna nessuno nessuna
+    molto molte molti molte poco parecchio assai
+  </stopwordList> -->
+  <!-- french:
+  <stopwordList>
+    alors au aucuns aussi autre avant avec avoir bon car ce cela ces ceux chaque ci comme comment
+    dans des du dedans dehors depuis deux devrait doit donc dos droite début elle elles en encore essai est et eu
+    fait faites fois font force haut hors ici il ils je juste la le les leur là ma maintenant mais mes mine moins
+    mon mot même ni nommés notre nous nouveaux ou où par parce parole pas personnes peut peu pièce plupart
+    pour pourquoi quand que quel quelle quelles quels qui sa sans ses seulement si sien son sont sous soyez sujet
+    sur ta tandis tellement tels tes ton tous tout trop très tu valeur voie voient vont votre vous vu ça étaient
+    état étions été être
+  </stopwordList>
+  -->
+
+  <!--
+   | Contains all words that should not be changed by an analyser when indexed.
+   | Separate the words by a blank.
+   +-->
+    <exclusionList></exclusionList>
+
+  <!--
+   | The names of the fields of which to prefetch the destinct values.
+   | Separate the field names by a blank.
+   |
+   | Put in the names of the fields you use a search:input_fieldlist tag for.
+   | The values shown in the list will then be extracted by the crawler and not
+   | by the search mask, which prevents a slow first loading of a page for huge
+   | indexes.
+   +-->
+    <valuePrefetchFields>mimetype</valuePrefetchFields>
+  
+  <!--
+   | Specifies wether the whole content should be stored in the index for the
+   | purpose of a content preview
+   +-->
+    <storeContentForPreview>true</storeContentForPreview>
+    
+  </searchIndex>
+
+
+<!--
+ | The preparators in the order they should be applied. Preparators that aren't listed
+ | here will be applied after the listed ones.
+ |
+ | You can use this list...
+ |   ... to define the priority (= order) of the preparators
+ |   ... to disable preparators
+ |   ... to configure preparators
+ +-->
+  <preparatorList>
+  <!--
+   | Enable this preparator if you want to use the text extractor of
+   | Microsoft Windows. This preparator is able to read tons of file formats.
+   |
+   | NOTE: Under Windows 2000 you have to make shure that reg.exe is installed
+   |       (It's part of the "Support Tools").
+   |       For details see: http://support.microsoft.com/kb/301423
+   +-->
+    <preparator enabled="false">
+      <class>.IfilterPreparator</class>
+    </preparator>
+
+  <!--
+   | Enable this preparator if you want to use MS Excel for indexing your Excel
+   | documents.
+   +-->
+    <preparator enabled="false">
+      <class>.JacobMsExcelPreparator</class>
+    </preparator>
+  
+  <!--
+   | Enable this preparator if you want to use MS Word for indexing your Word
+   | documents.
+   +-->
+    <preparator enabled="false">
+      <class>.JacobMsWordPreparator</class>
+    </preparator>
+  
+  <!--
+   | Enable this preparator if you want to use MS Powerpoint for indexing your
+   | Powerpoint documents.
+   +-->
+    <preparator enabled="false">
+      <class>.JacobMsPowerPointPreparator</class>
+    </preparator>
+
+  <!--
+   | This tells regain that it should first try the SimpleRtfPreparator for RTF
+   | files. Only if this one fails the SwingRtfPreparator is used
+   | (which is much slower).
+   +-->
+    <preparator enabled="false">
+      <class>.SimpleRtfPreparator</class>
+    </preparator>
+    <preparator>
+      <class>.SwingRtfPreparator</class>
+    </preparator>
+
+  <!--
+   | This preparator may be used if you have an external program that can
+   | extract text. It's disabled by default.
+   +-->
+    <preparator enabled="false">
+      <class>.ExternalPreparator</class>
+      <config>
+        <section name="command">
+          <param name="urlPattern">\.ps$</param>
+          <param name="commandLine">ps2ascii ${filename}</param>
+          <param name="checkExitCode">false</param>
+        </section>
+      </config>
+    </preparator>
+
+  <!-- CatchAll-preparator on basis of EmptyPreparator -->
+    <preparator priority="-10">
+      <class>.EmptyPreparator</class>
+      <urlPattern>.*</urlPattern>
+    </preparator>
+  </preparatorList>
+
+<!--
+ | Crawler Plugins that hook into the crawling process.
+ |
+ | You can use this list...
+ |   ... to define the priority (= order) of the preparators
+ |   ... to disable preparators
+ |   ... to configure preparators
+ +-->
+  <crawlerPluginList>
+    <!-- 
+     | Example ... Create Thumbnails during Crawling.
+     +
+  	<crawlerPlugin enabled="true">
+  	  <class>de.uni_siegen.wineme.come_in.thumbnailer.plugin.ThumbnailerPlugin</class>
+  	  <config>
+  	    <section name="thumbnailing">
+   	      <param name="thumbnailFolder">web/thumbs/</param>
+  	      <param name="imageWidth">160</param>
+  	      <param name="imageHeight">120</param>
+  	    </section>
+  	  </config>
+  	</crawlerPlugin>
+  	-->
+  	<!--
+  	 | Filter files by filesize.
+  	 +-->
+  	<crawlerPlugin enabled="false">
+  	  <class>net.sf.regain.crawler.plugin.plugin.FilesizeFilterPlugin</class> <!-- TODO: Allow .FilesizeFilterPlugin. For that, we need to modify PreparatorSettings -->
+  	  <config>
+  	    <section name="limits">
+   	      <param name="filesizeMinimumBytes">1</param> <!-- 0: No minimum size. -->
+  	      <param name="filesizeMaximumBytes">-1</param> <!-- -1: No maximum size. -->
+  	    </section>
+  	  </config>
+  	</crawlerPlugin>
+  	
+  </crawlerPluginList>
+
+<!--
+ | The index may be extended with auxiliary fields. These are fields that have
+ | been generated from the URL of an document.
+ |
+ | Example: If you have a directory with a sub directory for every project,
+ | then you may create a field with the project's name.
+ |
+ | The folling tag will create a field "project" with the value "otto23"
+ | from the URL "file://c:/projects/otto23/docs/Spez.doc":
+ |   <auxiliaryField name="project" regexGroup="1">
+ |     <regex>^file://c:/projects/([^/]*)</regex>
+ |   </auxiliaryField>
+ |
+ | URLs that doen't match will get no "project" field.
+ |
+ | Having done this you may search for "Offer project:otto23" and you will get
+ | only hits from this project directory.
+ +-->
+  <auxiliaryFieldList>
+  <!-- Don't change these two fields. But you may add your own. -->
+    <auxiliaryField name="extension" regexGroup="1" toLowercase="true">
+      <regex>\.([^\.]*)$</regex>
+    </auxiliaryField>
+    <auxiliaryField name="location" regexGroup="1" store="false" tokenize="true">
+      <regex>^(.*)$</regex>
+    </auxiliaryField>
+    <!--auxiliaryField name="mimetype" regexGroup="1" >
+      <regex>^()$</regex>
+    </auxiliaryField-->
+  </auxiliaryFieldList>
+
+</configuration>
