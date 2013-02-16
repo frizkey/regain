@@ -1129,7 +1129,6 @@ public class XmlCrawlerConfig implements CrawlerConfig {
   /**
    * Returns the names of the fields that shouldn't be tokenized.
    * 
-   * @param config The crawler configuration.
    * @return The names of the fields that shouldn't be tokenized.
    */
   @Override

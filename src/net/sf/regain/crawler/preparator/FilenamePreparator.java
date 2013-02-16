@@ -48,8 +48,8 @@ public class FilenamePreparator extends AbstractPreparator
 
   /**
    * From: Apache Commons IO
-   * @param filename
-   * @return
+   * @param filename 
+   * @return the file name
    */
   private static String getName(String filename)
   {

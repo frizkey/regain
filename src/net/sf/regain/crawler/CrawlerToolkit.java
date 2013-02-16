@@ -747,8 +747,8 @@ public class CrawlerToolkit {
    * Removes unwanted parts from the URL.
    *
    * @param url
-   * @param urlCleaners
-   * @return
+   * @param urlCleaners 
+   * @return cleaned URL
    */
   public static String cleanURL(String url, String[] urlCleaners) {
 
