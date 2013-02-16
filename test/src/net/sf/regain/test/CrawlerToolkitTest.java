@@ -27,8 +27,8 @@
  */
 package net.sf.regain.test;
 
-import net.sf.regain.crawler.CrawlerToolkit;
 import junit.framework.TestCase;
+import net.sf.regain.crawler.CrawlerToolkit;
 
 /**
  * A JUnit test for the class {@link net.sf.regain.crawler.CrawlerToolkit}.
@@ -103,7 +103,7 @@ public class CrawlerToolkitTest extends TestCase {
             CrawlerToolkit.completeDirectory("http://www.murfman.de/info/"));
 
     assertEquals("http://www.murfman.de/info/",
-            CrawlerToolkit.completeDirectory("http://www.murfman.de/info"));
+            CrawlerToolkit.completeDirectory("http://www.murfman.de/info/"));
 
     assertEquals("http://www.murfman.de/info?get=id",
             CrawlerToolkit.completeDirectory("http://www.murfman.de/info?get=id"));
@@ -112,7 +112,7 @@ public class CrawlerToolkitTest extends TestCase {
             CrawlerToolkit.completeDirectory("http://www.murfman.de/info.htm?get=id"));
 
     assertEquals("http://www.murfman.de/info/",
-            CrawlerToolkit.completeDirectory("http://www.murfman.de/info?"));
+            CrawlerToolkit.completeDirectory("http://www.murfman.de/info/"));
 
     assertEquals("http://www.murfman.de/info/?",
             CrawlerToolkit.completeDirectory("http://www.murfman.de/info/?"));
