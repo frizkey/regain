@@ -186,6 +186,10 @@ public class SearchResultsImpl implements SearchResults {
           readerArray[j] = searchers[j].getIndexReader();
         }
         mMultiReader = new MultiReader(readerArray, false);
+        
+        if (indexSearcherManagers[0] != null) {
+          indexSearcherManagers[0].releaseIndexSearcher(mIndexSearcher);
+        }
         mIndexSearcher = new IndexSearcher(mMultiReader);
         // get the 'first' analyzer (in fact it is a random choice)
         // All indexes has to be build with the same analyzer
@@ -219,7 +223,9 @@ public class SearchResultsImpl implements SearchResults {
 //                mQuery.add(new TermQuery(new Term("filename", queryText)), Occur.SHOULD);
 //              }
             }
-            //System.out.println("Query: '" + queryText + "' -> '" + mQuery.toString() + "'");
+            if (mLog.isDebugEnabled()) {
+              mLog.debug("Query: '" + queryText + "' -> '" + mQuery.toString() + "'");
+            }
 
           }
         } catch (ParseException exc) {
@@ -277,12 +283,11 @@ public class SearchResultsImpl implements SearchResults {
       // no index given
     }
     } finally {
-      if (indexSearcherManagers[0] != null)
-        indexSearcherManagers[0].releaseIndexSearcher(mIndexSearcher);
       for (int i = 0; i < indexSearcherManagers.length; i++)
       {
-        if (indexSearcherManagers[i] != null)
+        if (indexSearcherManagers[i] != null) {
           indexSearcherManagers[i].releaseIndexSearcher(searchers[i]);
+        }
       }
     }
 
@@ -298,8 +303,9 @@ public class SearchResultsImpl implements SearchResults {
    */
   private String removeMimetypeQuery(String queryText, BooleanQuery mainQuery)
   {
-    if (queryText == null)
+    if (queryText == null) {
       return null;
+    }
     
     // Remove the mimetype field if the query contains it
     String mimeTypeFieldText = null;
@@ -339,8 +345,9 @@ public class SearchResultsImpl implements SearchResults {
         positiveMimes.add(getAtomicMimeTypeQuery(mimeTypeFieldText), Occur.SHOULD);
       }
     } while (found);
-    if (positiveMimes.getClauses().length > 0)
+    if (positiveMimes.getClauses().length > 0) {
       mainQuery.add(positiveMimes, Occur.MUST);
+    }
     
     // Remove empty clauses that remained
     Pattern emptyMatcherPattern = Pattern.compile("(\\(\\s*\\))");
@@ -349,8 +356,9 @@ public class SearchResultsImpl implements SearchResults {
       matcher = emptyMatcherPattern.matcher(queryText);
       found = matcher.find();
       
-      if (found && matcher.groupCount() > 0)
+      if (found && matcher.groupCount() > 0) {
         queryText = queryText.replace(matcher.group(1), "");
+      }
     } while (found);
     
     return queryText;
@@ -367,10 +375,12 @@ public class SearchResultsImpl implements SearchResults {
     Term term = new Term("mimetype", mimeTypeFieldText);
     
     Query query;
-    if (mimeTypeFieldText.contains("*"))
+    if (mimeTypeFieldText.contains("*")) {
       query = new WildcardQuery(term);
-    else
+    }
+    else {
       query = new TermQuery(term);
+    }
     
     mimetypeFieldQuery.add(query, Occur.SHOULD);
     return mimetypeFieldQuery;
@@ -405,8 +415,9 @@ public class SearchResultsImpl implements SearchResults {
    */
   @Override
   public int getDocumentCount() {
-    if (mMultiReader == null)
+    if (mMultiReader == null) {
       return 0;
+    }
     return mMultiReader.numDocs() - mMultiReader.numDeletedDocs();
   }
 
@@ -678,8 +689,9 @@ public class SearchResultsImpl implements SearchResults {
       throw new RegainException("Error while searching pattern: " + mQueryText, exIO);
 
     } finally {
-      if (manager != null)
+      if (manager != null) {
         manager.releaseIndexSearcher(searcher);
+      }
     }
 
   }
