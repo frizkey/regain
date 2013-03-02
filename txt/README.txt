@@ -1,3 +1,8 @@
+Version 2.0.3 on 2012/March/02 STABLE
+-------------------------------------
+BUGFIX
+ * Add Office 2007 mime-types to search result request handler
+
 Version 2.0.2 on 2012/March/02 STABLE
 -------------------------------------
 BUGFIX
