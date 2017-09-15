@@ -1,5 +1,6 @@
 # regain
 fork from http://regain.sourceforge.net/
+
 regain is a search engine similar to web search engines like Google, with the difference that you don't search the web, but your own files and documents. Using regain you can search through large portions of data (several gigabytes!) in split seconds!
 
 This is possible by using a search index. regain crawles through your files or webpages, extracts all text and puts it in a smart search index. All this happens in the background. So if you want to search something you get the results immediately.
